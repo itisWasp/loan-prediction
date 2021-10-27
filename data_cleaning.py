@@ -9,8 +9,8 @@ Created on Wed Oct 20 12:15:48 2021
 import pandas as pd
 import numpy as np
 
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+train = pd.read_csv('Data/train.csv')
+test = pd.read_csv('Data/test.csv')
 
 #checking for the missing value
 train.isnull().sum()
