@@ -9,8 +9,8 @@ Created on Wed Oct 20 12:15:48 2021
 import pandas as pd
 import numpy as np
 
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+train = pd.read_csv('Data/train.csv')
+test = pd.read_csv('Data/test.csv')
 
 #checking for the missing value
 train.isnull().sum()
@@ -61,6 +61,9 @@ test['LoanAmount_log'] = np.log(test.LoanAmount)
 # =============================================================================
 
 train.LoanAmount_log.hist(bins=20)
+
+train.to_csv('train_new.csv', index = False)
+test.to_csv('test_new.csv', index = False)
 
 
 
