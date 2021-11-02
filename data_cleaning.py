@@ -62,5 +62,8 @@ test['LoanAmount_log'] = np.log(test.LoanAmount)
 
 train.LoanAmount_log.hist(bins=20)
 
+train.to_csv('train_new.csv', index = False)
+test.to_csv('test_new.csv', index = False)
+
 
 
