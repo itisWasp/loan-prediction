@@ -10,6 +10,9 @@ import numpy as np
 from sklearn.model_selection  import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn import metrics
+import matplotlib.pyplot as plt
 
 train =  pd.read_csv('Data/train_new.csv')
 test = pd.read_csv('Data/test_new.csv')
@@ -54,3 +57,48 @@ print('The Accuracy of Logistic Regression Model:',log_reg*100)
 # The Accuracy of Logistic Regression is 79.45945945945945
 # =============================================================================
 
+submission = pd.read_csv('Data/submission.csv')
+
+submission.Loan_Status = pred_test
+submission.Loan_Status.replace(1, 'Y', inplace=True)
+submission.Loan_Status.replace(0, 'N', inplace=True)
+
+pd.DataFrame(submission, columns=['Loan_ID', 'Loan_Status']).to_csv('submission.csv', index=False)
+
+# =============================================================================
+# Cross Validation metrics Using Stratified-K-Folds 
+# =============================================================================
+
+'''
+    Now Let's  make a cross validation logistic model with stratified 5 folds
+    And make prediction on the test dataset.    
+'''
+
+i = 1
+
+KF = StratifiedKFold(n_splits = 5, random_state=1,shuffle=True)
+
+for train_index, test_index in KF.split(X,y):
+    print('\n{} of Kfold {} '.format(i,KF.n_splits))
+    xtrain = X.iloc[train_index]
+    ytrain = y.iloc[train_index]
+    xvalidation = X.iloc[test_index]
+    yvalidation = y.iloc[test_index]
+    model = LogisticRegression(random_state=1)
+    model.fit(xtrain,ytrain)
+    pred_test = model.predict(xvalidation)
+    score = accuracy_score(yvalidation, pred_test)
+    print('accuracy_score', score)
+    i+=1 
+    pred_test = model.predict(test)
+    pred = model.predict_proba(xvalidation)[:,1]
+    
+
+False_Positive_Rate, True_Positive_Rate, _ = metrics.roc_curve(yvalidation, pred, pos_label='Y')
+AUC = metrics.roc_auc_score(yvalidation, pred)
+plt.figure(figsize=(12,8))
+plt.plot(False_Positive_Rate, True_Positive_Rate, label='validation, AUC='+str(AUC))
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc=4)#Location of the legend on the position on the screen represented by numbers from 1 to 4.
+plt.show()
