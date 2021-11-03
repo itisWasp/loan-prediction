@@ -14,9 +14,6 @@ from sklearn.metrics import accuracy_score
 train =  pd.read_csv('Data/train_new.csv')
 test = pd.read_csv('Data/test_new.csv')
 
-train_og = pd.read_csv('Data/train.csv')
-test_og = pd.read_csv('Data/test.csv')
-
 # =============================================================================
 # #Removing the Loan_ID since it has no effect.
 # =============================================================================

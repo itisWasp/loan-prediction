@@ -46,6 +46,7 @@ test.Dependents.fillna(test.Dependents.mode()[0], inplace=True)
 test.Self_Employed.fillna(test.Self_Employed.mode()[0], inplace=True)
 test.Credit_History.fillna(test.Credit_History.mode()[0], inplace=True)
 test.Loan_Amount_Term.fillna(test.Loan_Amount_Term.mode()[0], inplace=True)
+test.LoanAmount.fillna(test.LoanAmount.median(), inplace=True)
 
 #Outlier treament.
 '''
