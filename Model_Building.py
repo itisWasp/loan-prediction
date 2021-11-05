@@ -14,9 +14,15 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
 import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from xgboost import XGBClassifier
 
 train =  pd.read_csv('Data/train_new.csv')
 test = pd.read_csv('Data/test_new.csv')
+
+test_og = pd.read_csv('Data/test.csv')
 
 # =============================================================================
 # #Removing the Loan_ID since it has no effect.
@@ -74,7 +80,7 @@ pd.DataFrame(submission, columns=['Loan_ID', 'Loan_Status']).to_csv('submission.
     Now Let's  make a cross validation logistic model with stratified 5 folds
     And make prediction on the test dataset.    
 '''
-
+print('\n Logistic Regression using stratified k-folds')
 i = 1
 
 KF = StratifiedKFold(n_splits = 5, random_state=1,shuffle=True)
@@ -108,8 +114,6 @@ plt.show()
 # Feature Engineering
 # =============================================================================
 
-train = pd.read_csv('Data/train.csv')
-test = pd.read_csv('Data/test.csv')
 
 train.columns
 train['Total_Amount'] = train.ApplicantIncome + train.CoapplicantIncome
@@ -136,3 +140,153 @@ test = test.drop(['ApplicantIncome', 'CoapplicantIncome', 'Loan_Amount_Term', 'L
 # =============================================================================
 # Decision Tree.
 # =============================================================================
+
+i=1
+KF = StratifiedKFold(n_splits=5, random_state=1, shuffle=True)
+for train_index, test_index in KF.split(X,y):
+    print('\n{} of Kfolds {} '.format(i, KF.n_splits))
+    xtrain = X.iloc[train_index]
+    ytrain = y.iloc[train_index]
+    xvalidation = X.iloc[test_index]
+    yvalidation = y.iloc[test_index]
+    model = tree.DecisionTreeClassifier(random_state=1)
+    model.fit(xtrain,ytrain)
+    pred_test = model.predict(xvalidation)
+    score = accuracy_score(yvalidation, pred_test)
+    print('Accuracy Score of Decision Tree is ',score)
+    i+=1
+    pred_test = model.predict(test)
+    
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_og['Loan_ID']
+
+submission['Loan_Status'].replace(0, 'N', inplace=True)
+submission['Loan_Status'].replace(1, 'Y', inplace=True)
+
+pd.DataFrame(submission, columns=['Loan_ID', 'Loan_Status']).to_csv('Decision Tree.csv', index=False)
+
+# =============================================================================
+# Random Forest
+# =============================================================================
+
+print('\n Random Forest')
+
+i=1
+KF = StratifiedKFold(n_splits=5, random_state=1, shuffle=True)
+for train_index, test_index in KF.split(X,y):
+    print('\n{} of Kfolds {} '.format(i, KF.n_splits))
+    xtrain = X.iloc[train_index]
+    ytrain = y.iloc[train_index]
+    xvalidation = X.iloc[test_index]
+    yvalidation = y.iloc[test_index]
+    model = RandomForestClassifier(random_state=1, max_depth=10)
+    model.fit(xtrain,ytrain)
+    pred_test = model.predict(xvalidation)
+    score = accuracy_score(yvalidation, pred_test)
+    print('Accuracy Score of Random Forest is ',score)
+    i+=1
+    pred_test = model.predict(test)
+
+# =============================================================================
+# GridSearch
+# =============================================================================
+
+param_grid = {'max_depth': list(range(1, 20, 2)),
+             'n_estimators': list(range(1,200, 20))
+             }
+
+
+grid_search = GridSearchCV(RandomForestClassifier(random_state=1), param_grid)
+
+grid_search.fit(X,y)
+
+GridSearchCV(cv=None, error_score='raise',
+             estimator = RandomForestClassifier(bootstrap = True, class_weight = None, 
+                                                criterion='gini', max_depth= None, 
+                                                max_features='auto', max_leaf_nodes= None,
+                                                min_impurity_decrease = 0.0, 
+                                                min_impurity_split=None, min_samples_leaf = 1,
+                                                min_samples_split = 2, min_weight_fraction_leaf = 0.0,
+                                                n_estimators= 10, n_jobs=1, oob_score=False, 
+                                                random_state =1, verbose =0, warm_start=False),
+             n_jobs=1,
+             param_grid = {'max_depth': list(range(1, 20, 2)),
+             'n_estimators': list(range(1,200, 20))
+             }, pre_dispatch = '2*n_jobs', refit = True,
+             scoring = None, verbose=0
+             )
+
+#Estimating the optimized value
+grid_search.best_estimator_
+
+RandomForestClassifier(bootstrap = True, class_weight = None, 
+                                                criterion='gini', max_depth= None, 
+                                                max_features='auto', max_leaf_nodes= None,
+                                                min_impurity_decrease = 0.0, 
+                                                min_impurity_split=None, min_samples_leaf = 1,
+                                                min_samples_split = 2, min_weight_fraction_leaf = 0.0,
+                                                n_estimators= 10, n_jobs=1, oob_score=False, 
+                                                random_state =1, verbose =0, warm_start=False)
+
+
+i=1
+KF = StratifiedKFold(n_splits=5, random_state=1, shuffle=True)
+for train_index, test_index in KF.split(X,y):
+    print('\n{} of Kfolds {} '.format(i, KF.n_splits))
+    xtrain = X.iloc[train_index]
+    ytrain = y.iloc[train_index]
+    xvalidation = X.iloc[test_index]
+    yvalidation = y.iloc[test_index]
+    model = RandomForestClassifier(random_state=1, max_depth=3, n_estimators=41)
+    model.fit(xtrain,ytrain)
+    pred_test = model.predict(xvalidation)
+    score = accuracy_score(yvalidation, pred_test)
+    print('Accuracy Score of Random Forest is ',score)
+    i+=1
+    pred_test = model.predict(test)
+
+
+submission['Loan_Status'] = pred_test
+submission['Loan_ID'] = test_og['Loan_ID']
+
+submission['Loan_Status'].replace(0, 'N', inplace=True)
+submission['Loan_Status'].replace(1, 'Y', inplace=True)
+
+pd.DataFrame(submission, columns=['Loan_ID', 'Loan_Status']).to_csv('Random Forest.csv', index=False)
+
+importances = pd.Series(model.feature_importances_, index= X.columns)
+importances.plot(kind='barh', figsize=(16,8))
+
+
+# =============================================================================
+# XGBOOST
+# =============================================================================
+
+
+i=1
+KF = StratifiedKFold(n_splits=5, random_state=1, shuffle=True)
+for train_index, test_index in KF.split(X,y):
+    print('\n{} of Kfolds {} '.format(i, KF.n_splits))
+    xtrain = X.iloc[train_index]
+    ytrain = y.iloc[train_index]
+    xvalidation = X.iloc[test_index]
+    yvalidation = y.iloc[test_index]
+    model = XGBClassifier(max_depth=4, n_estimators=50)
+    model.fit(xtrain,ytrain)
+    pred_test = model.predict(xvalidation)
+    score = accuracy_score(yvalidation, pred_test)
+    print('Accuracy Score of Random Forest is ',score)
+    i+=1
+    pred_test = model.predict(test)
+    pred3 = model.predict_proba(test)[:,1]
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
